@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Financeiro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --bg-entrada: #065f46;
+            --bg-saida: #991b1b;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --accent: #10b981;
+            --accent-red: #ef4444;
+        }
+
+        .light {
+            --bg-primary: #f0f2f5;
+            --bg-secondary: #ffffff;
+            --bg-entrada: #d1fae5;
+            --bg-saida: #fee2e2;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --accent: #059669;
+            --accent-red: #dc2626;
+        }
+
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .chat-container {
+            background-color: var(--bg-secondary);
+            transition: background-color 0.3s;
+        }
+
+        .transaction-entrada {
+            background-color: var(--bg-entrada);
+            margin-left: auto;
+            border-radius: 12px 12px 0 12px;
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        .transaction-saida {
+            background-color: var(--bg-saida);
+            margin-right: auto;
+            border-radius: 12px 12px 12px 0;
+            animation: slideInLeft 0.3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .btn-float {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-float:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-float:active {
+            transform: scale(0.95);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .scrollbar-custom::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scrollbar-custom::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .scrollbar-custom::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.3);
+            border-radius: 3px;
+        }
+
+        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.5);
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+        }
+
+        .header-gradient {
+            background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+        }
+    </style>
+</head>
+
+<body class="light">
+    <div class="header-gradient shadow-lg sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-white font-semibold text-lg">Controle Financeiro</h1>
+                    <p class="text-white/80 text-xs">Gerencie suas finanças</p>
+                </div>
+            </div>
+            <button onclick="toggleTheme()"
+                class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition">
+                <svg id="theme-icon-sun" class="w-5 h-5 text-white hidden" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                        d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                        clip-rule="evenodd"></path>
+                </svg>
+                <svg id="theme-icon-moon" class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 py-6">
+        <div class="balance-card rounded-2xl p-6 text-white">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-white/80 text-sm font-medium mb-1">Saldo Atual</p>
+                    <h2 id="balance" class="text-4xl font-bold">R$ 0,00</h2>
+                </div>
+                <div class="text-right">
+                    <p class="text-white/80 text-xs mb-1">Este mês</p>
+                    <p id="month-summary" class="text-sm font-medium">0 transações</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="bg-white/10 rounded-xl p-3 backdrop-blur-sm">
+                    <p class="text-white/80 text-xs mb-1">Entradas</p>
+                    <p id="total-entrada" class="text-lg font-semibold">R$ 0,00</p>
+                </div>
+                <div class="bg-white/10 rounded-xl p-3 backdrop-blur-sm">
+                    <p class="text-white/80 text-xs mb-1">Saídas</p>
+                    <p id="total-saida" class="text-lg font-semibold">R$ 0,00</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 pb-24">
+        <div class="chat-container rounded-2xl shadow-xl p-6 min-h-[400px]">
+            <div id="transactions-list" class="space-y-4 scrollbar-custom overflow-y-auto max-h-[500px]">
+                <div class="text-center text-gray-400 py-8">
+                    <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                        </path>
+                    </svg>
+                    <p class="text-sm">Nenhuma transação registrada</p>
+                    <p class="text-xs mt-1">Adicione uma entrada ou saída</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed bottom-6 right-6 flex flex-col gap-3 z-30">
+        <button onclick="openReport()"
+            class="btn-float w-14 h-14 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white"
+            title="Relatório Mensal">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                </path>
+            </svg>
+        </button>
+        <button onclick="openModal('entrada')"
+            class="btn-float w-14 h-14 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-white"
+            title="Nova Entrada">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
+            </svg>
+        </button>
+        <button onclick="openModal('saida')"
+            class="btn-float w-14 h-14 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white"
+            title="Nova Saída">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"></path>
+            </svg>
+        </button>
+    </div>
+
+    <div id="transaction-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4"
+        onclick="closeModalOnBackdrop(event)">
+        <div class="modal chat-container rounded-2xl shadow-2xl max-w-md w-full p-6" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-6">
+                <h3 id="modal-title" class="text-2xl font-bold">Nova Transação</h3>
+                <button onclick="closeModal()"
+                    class="w-8 h-8 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <form id="transaction-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Descrição</label>
+                    <input type="text" id="description" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-base transition text-gray-900
+                            dark:text-white" placeholder="Ex: Salário, Aluguel, Compras...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Valor (R$)</label>
+                    <input type="number" id="amount" required step="0.01" min="0.01" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-base transition text-gray-900
+                           dark:text-white" placeholder="0,00">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeModal()"
+                        class="flex-1 px-6 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="submit-btn"
+                        class="flex-1 px-6 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold transition shadow-lg">
+                        Adicionar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="modal chat-container rounded-2xl shadow-2xl max-w-sm w-full p-6">
+            <h3 class="text-xl font-bold mb-4">Confirmar Exclusão</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-6">Tem certeza que deseja excluir esta transação?</p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirmModal()"
+                    class="flex-1 px-6 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition">
+                    Cancelar
+                </button>
+                <button onclick="confirmDelete()"
+                    class="flex-1 px-6 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold transition">
+                    Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação para Fechar o Mês -->
+    <div id="close-month-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[60] p-4">
+        <div class="modal chat-container rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h3 class="text-xl font-bold mb-4">Fechar o Mês</h3>
+            <div id="close-month-content" class="mb-6">
+                <p class="text-gray-600 dark:text-gray-400 mb-4">
+                    Ao fechar o mês, todas as transações atuais serão arquivadas no histórico e você começará um novo
+                    mês zerado.
+                </p>
+                <div id="close-month-summary" class="p-4 rounded-lg bg-gray-100 dark:bg-gray-800 space-y-2">
+                    <!-- Será preenchido dinamicamente -->
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                    ⚠️ Salve o relatório antes de fechar, se necessário.
+                </p>
+            </div>
+
+            <!-- Botões de Salvar/Baixar -->
+            <div class="flex gap-2 mb-4">
+                <button onclick="downloadReportHTML()"
+                    class="flex-1 px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition text-sm flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    Baixar HTML
+                </button>
+                <button onclick="downloadReportTXT()"
+                    class="flex-1 px-4 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white font-medium transition text-sm flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    Baixar TXT
+                </button>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeCloseMonthModal()"
+                    class="flex-1 px-6 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition">
+                    Cancelar
+                </button>
+                <button onclick="confirmCloseMonth()"
+                    class="flex-1 px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold transition">
+                    Confirmar e Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="report-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4"
+        onclick="closeReportModalOnBackdrop(event)">
+        <div class="modal chat-container rounded-2xl shadow-2xl max-w-lg w-full p-6" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold">Relatório Mensal</h3>
+                <button onclick="closeReportModal()"
+                    class="w-8 h-8 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <div id="report-content" class="space-y-4">
+            </div>
+
+            <p id="report-empty-message" class="text-center text-gray-400 py-8 hidden">
+                Nenhuma transação encontrada para este mês.
+            </p>
+
+            <div class="pt-6 border-t mt-6 border-gray-200 dark:border-gray-700">
+                <h4 id="report-balance-summary" class="text-xl font-bold"></h4>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+                <button onclick="closeMonth()"
+                    class="flex-1 px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold transition shadow-lg flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
+                        </path>
+                    </svg>
+                    Fechar Mês
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || []; // eslint-disable-line no-restricted-globals
+        let monthHistory = JSON.parse(localStorage.getItem('monthHistory')) || []; // eslint-disable-line no-restricted-globals
+        let currentType = 'entrada';
+        let deleteId = null;
+        let editingId = null;
+
+        // Dark mode setup...
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.remove('light');
+            document.documentElement.classList.add('dark');
+            document.body.classList.remove('light');
+            updateThemeIcon();
+        }
+        function downloadReportTXT() {
+            // 1. Obter os dados necessários para o relatório
+            const totalEntrada = transactions
+                .filter(t => t.type === 'entrada')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const totalSaida = transactions
+                .filter(t => t.type === 'saida')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const currentBalance = totalEntrada - totalSaida;
+
+            // 2. Formatar a lista de transações para o arquivo TXT
+            const transactionsList = transactions
+                .sort((a, b) => new Date(a.date) - new Date(b.date)) // Ordena por data
+                .map(t => {
+                    const dateStr = new Date(t.date).toLocaleDateString('pt-BR');
+                    const sign = t.type === 'entrada' ? '+' : '-';
+                    return `${dateStr} | ${t.description.padEnd(30)} | ${sign} ${formatCurrency(t.amount)}`;
+                }).join('\n');
+
+            // 3. Montar o conteúdo completo do relatório
+            const reportContent = `
+=========================================
+    RELATÓRIO FINANCEIRO (MÊS ATUAL)
+=========================================
+
+Total de Entradas: ${formatCurrency(totalEntrada)}
+Total de Saídas:   ${formatCurrency(totalSaida)}
+-----------------------------------------
+SALDO ATUAL:       ${formatCurrency(currentBalance)}
+=========================================
+
+DETALHES DAS TRANSAÇÕES:
+Data     | Descrição                        | Valor
+------------------------------------------------------
+${transactionsList}
+------------------------------------------------------
+(Fim do Relatório)
+    `;
+
+            // 4. Criar o Blob e forçar o download
+            const filename = `relatorio_financeiro_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.txt`;
+            const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            alert(`Relatório "${filename}" baixado com sucesso!`);
+        }
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.remove('light');
+                document.documentElement.classList.add('dark');
+                document.body.classList.remove('light');
+            } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+                document.body.classList.add('light');
+            }
+            updateThemeIcon();
+        });
+
+        function toggleTheme() {
+            document.body.classList.toggle('light');
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const isLight = document.body.classList.contains('light');
+            document.getElementById('theme-icon-sun').classList.toggle('hidden', !isLight);
+            document.getElementById('theme-icon-moon').classList.toggle('hidden', isLight);
+        }
+
+        // --- FUNÇÕES DO RELATÓRIO (OPEN REPORT) ---
+        function openReport() {
+            // 1. Mostrar o modal
+            document.getElementById('report-modal').classList.remove('hidden');
+            document.getElementById('report-modal').classList.add('flex');
+
+            // 2. Obter o mês/ano atual
+            const now = new Date();
+            const thisMonth = now.getMonth();
+            const thisYear = now.getFullYear();
+
+            // 3. Filtrar transações do mês atual
+            const monthTransactions = transactions.filter(t => {
+                const date = new Date(t.date);
+                return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
+            }).sort((a, b) => new Date(b.date) - new Date(a.date)); // Ordena por data
+
+            const reportContent = document.getElementById('report-content');
+            const reportEmptyMsg = document.getElementById('report-empty-message');
+            const reportBalanceSummary = document.getElementById('report-balance-summary');
+
+            // Limpar conteúdo anterior
+            reportContent.innerHTML = '';
+
+            if (monthTransactions.length === 0) {
+                reportEmptyMsg.classList.remove('hidden');
+                reportBalanceSummary.textContent = 'Saldo no Mês: R$ 0,00';
+                reportBalanceSummary.style.color = 'var(--text-primary)';
+                return;
+            } else {
+                reportEmptyMsg.classList.add('hidden');
+            }
+
+            // 4. Calcular e exibir totais
+            const totalEntradaMes = monthTransactions
+                .filter(t => t.type === 'entrada')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const totalSaidaMes = monthTransactions
+                .filter(t => t.type === 'saida')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const balanceMes = totalEntradaMes - totalSaidaMes;
+
+            // 5. Renderizar o resumo e a lista de transações (Com Nomes/Descrições)
+            reportContent.innerHTML = `
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="p-4 rounded-lg shadow-md" style="background-color: var(--bg-entrada); color: var(--text-primary);">
+                    <p class="text-sm font-medium opacity-80">Total de Entradas</p>
+                    <p class="text-2xl font-bold">${formatCurrency(totalEntradaMes)}</p>
+                </div>
+                <div class="p-4 rounded-lg shadow-md" style="background-color: var(--bg-saida); color: var(--text-primary);">
+                    <p class="text-sm font-medium opacity-80">Total de Saídas</p>
+                    <p class="text-2xl font-bold">${formatCurrency(totalSaidaMes)}</p>
+                </div>
+            </div>
+
+            <h4 class="text-lg font-semibold border-b pb-2 mb-4" style="color: var(--text-primary);">Detalhes das Transações (${monthTransactions.length}):</h4>
+            <div class="space-y-3 max-h-60 overflow-y-auto scrollbar-custom p-1">
+                ${monthTransactions.map(t => `
+                    <div class="flex items-center justify-between p-3 rounded-lg ${t.type === 'entrada' ? 'bg-green-100 dark:bg-green-900/50' : 'bg-red-100 dark:bg-red-900/50'}">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-sm truncate" style="color: var(--text-primary);">${t.description}</p>
+                            <p class="text-xs opacity-70" style="color: var(--text-secondary);">${formatDate(t.date).split(' ')[0]}</p>
+                        </div>
+                        <p class="font-bold text-base ${t.type === 'entrada' ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'} ml-4 flex-shrink-0">
+                            ${t.type === 'saida' ? '- ' : '+ '}${formatCurrency(t.amount)}
+                        </p>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+            // 6. Atualizar o saldo final e cor
+            reportBalanceSummary.textContent = `Saldo no Mês: ${formatCurrency(balanceMes)}`;
+            reportBalanceSummary.style.color = balanceMes >= 0 ? 'var(--accent)' : 'var(--accent-red)';
+        }
+
+        function closeReportModal() {
+            document.getElementById('report-modal').classList.add('hidden');
+            document.getElementById('report-modal').classList.remove('flex');
+        }
+
+        function closeReportModalOnBackdrop(event) {
+            if (event.target.id === 'report-modal') {
+                closeReportModal();
+            }
+        }
+        // --- FIM FUNÇÕES RELATÓRIO ---
+
+        // --- FUNÇÕES PARA FECHAR O MÊS ---
+        function closeMonth() {
+            // Fechar o modal de relatório primeiro para evitar sobreposição
+            closeReportModal();
+
+            // Pequeno delay para suavizar a transição
+            setTimeout(() => {
+                // Verificar se há transações para fechar
+                const now = new Date();
+                const thisMonth = now.getMonth();
+                const thisYear = now.getFullYear();
+
+                const monthTransactions = transactions.filter(t => {
+                    const date = new Date(t.date);
+                    return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
+                });
+
+                if (monthTransactions.length === 0) {
+                    showCustomAlert('Não há transações para fechar neste mês.');
+                    return;
+                }
+
+                // Calcular totais
+                const totalEntrada = monthTransactions
+                    .filter(t => t.type === 'entrada')
+                    .reduce((sum, t) => sum + t.amount, 0);
+
+                const totalSaida = monthTransactions
+                    .filter(t => t.type === 'saida')
+                    .reduce((sum, t) => sum + t.amount, 0);
+
+                const balance = totalEntrada - totalSaida;
+
+                // Preencher o resumo no modal de confirmação
+                const summaryDiv = document.getElementById('close-month-summary');
+                summaryDiv.innerHTML = `
+                    <div class="flex justify-between">
+                        <span class="font-medium">Total de Transações:</span>
+                        <span class="font-bold">${monthTransactions.length}</span>
+                    </div>
+                    <div class="flex justify-between text-green-600 dark:text-green-400">
+                        <span class="font-medium">Total de Entradas:</span>
+                        <span class="font-bold">${formatCurrency(totalEntrada)}</span>
+                    </div>
+                    <div class="flex justify-between text-red-600 dark:text-red-400">
+                        <span class="font-medium">Total de Saídas:</span>
+                        <span class="font-bold">${formatCurrency(totalSaida)}</span>
+                    </div>
+                    <div class="flex justify-between text-lg pt-2 border-t border-gray-300 dark:border-gray-600" style="color: ${balance >= 0 ? 'var(--accent)' : 'var(--accent-red)'}">
+                        <span class="font-semibold">Saldo Final:</span>
+                        <span class="font-bold">${formatCurrency(balance)}</span>
+                    </div>
+                `;
+
+                // Mostrar o modal de confirmação
+                document.getElementById('close-month-modal').classList.remove('hidden');
+                document.getElementById('close-month-modal').classList.add('flex');
+            }, 200);
+        }
+
+        function closeCloseMonthModal() {
+            document.getElementById('close-month-modal').classList.add('hidden');
+            document.getElementById('close-month-modal').classList.remove('flex');
+        }
+
+        function confirmCloseMonth() {
+            const now = new Date();
+            const thisMonth = now.getMonth();
+            const thisYear = now.getFullYear();
+
+            // Filtrar transações do mês atual
+            const monthTransactions = transactions.filter(t => {
+                const date = new Date(t.date);
+                return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
+            });
+
+            if (monthTransactions.length === 0) {
+                closeCloseMonthModal();
+                return;
+            }
+
+            // Calcular totais
+            const totalEntrada = monthTransactions
+                .filter(t => t.type === 'entrada')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const totalSaida = monthTransactions
+                .filter(t => t.type === 'saida')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const balance = totalEntrada - totalSaida;
+
+            // Criar objeto do mês fechado
+            const closedMonth = {
+                id: Date.now(),
+                month: thisMonth,
+                year: thisYear,
+                monthName: new Date(thisYear, thisMonth).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+                transactions: monthTransactions,
+                totalEntrada: totalEntrada,
+                totalSaida: totalSaida,
+                balance: balance,
+                closedAt: new Date().toISOString()
+            };
+
+            // Adicionar ao histórico
+            monthHistory.push(closedMonth);
+            localStorage.setItem('monthHistory', JSON.stringify(monthHistory)); // eslint-disable-line no-restricted-globals
+
+            // Remover transações fechadas da lista atual
+            transactions = transactions.filter(t => {
+                const date = new Date(t.date);
+                return !(date.getMonth() === thisMonth && date.getFullYear() === thisYear);
+            });
+            localStorage.setItem('transactions', JSON.stringify(transactions)); // eslint-disable-line no-restricted-globals
+
+            // Atualizar interface
+            renderTransactions();
+            updateBalance();
+            closeCloseMonthModal();
+            closeReportModal();
+
+            // Mostrar mensagem de sucesso
+            showCustomAlert(`Mês fechado com sucesso! Saldo final: ${formatCurrency(balance)}`);
+        }
+
+        function showCustomAlert(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-white dark:bg-gray-800 shadow-2xl rounded-xl p-6 max-w-sm w-full mx-4';
+            alertDiv.style.animation = 'fadeIn 0.3s ease-out';
+            alertDiv.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-gray-900 dark:text-white font-medium">${message}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(alertDiv);
+
+            // Auto-remover após 4 segundos
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 4000);
+        }
+        // --- FIM FUNÇÕES FECHAR O MÊS ---
+
+        function openModal(type) {
+            currentType = type;
+            editingId = null;
+            document.getElementById('transaction-modal').classList.remove('hidden');
+            document.getElementById('transaction-modal').classList.add('flex');
+            document.getElementById('modal-title').textContent = type === 'entrada' ? 'Nova Entrada' : 'Nova Saída';
+            document.getElementById('submit-btn').textContent = 'Adicionar';
+            document.getElementById('submit-btn').className = `flex-1 px-6 py-3 rounded-xl ${type === 'entrada' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'} text-white font-semibold transition shadow-lg`;
+            document.getElementById('description').focus();
+        }
+
+        function editTransaction(id) {
+            const transaction = transactions.find(t => t.id === id);
+            if (!transaction) return;
+
+            editingId = id;
+            currentType = transaction.type;
+            document.getElementById('description').value = transaction.description;
+            document.getElementById('amount').value = transaction.amount;
+
+            document.getElementById('transaction-modal').classList.remove('hidden');
+            document.getElementById('transaction-modal').classList.add('flex');
+            document.getElementById('modal-title').textContent = currentType === 'entrada' ? 'Editar Entrada' : 'Editar Saída';
+            document.getElementById('submit-btn').textContent = 'Salvar';
+            document.getElementById('submit-btn').className = `flex-1 px-6 py-3 rounded-xl ${currentType === 'entrada' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'} text-white font-semibold transition shadow-lg`;
+            document.getElementById('description').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('transaction-modal').classList.add('hidden');
+            document.getElementById('transaction-modal').classList.remove('flex');
+            document.getElementById('transaction-form').reset();
+        }
+
+        function closeModalOnBackdrop(event) {
+            if (event.target.id === 'transaction-modal') {
+                closeModal();
+            }
+        }
+
+        function showDeleteConfirm(id) {
+            deleteId = id;
+            document.getElementById('confirm-modal').classList.remove('hidden');
+            document.getElementById('confirm-modal').classList.add('flex');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            document.getElementById('confirm-modal').classList.remove('flex');
+            deleteId = null;
+        }
+
+        function confirmDelete() {
+            if (deleteId !== null) {
+                transactions = transactions.filter(t => t.id !== deleteId);
+                localStorage.setItem('transactions', JSON.stringify(transactions)); // eslint-disable-line no-restricted-globals
+                renderTransactions();
+                updateBalance();
+                closeConfirmModal();
+            }
+        }
+
+        document.getElementById('transaction-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const description = document.getElementById('description').value.trim();
+            const amount = parseFloat(document.getElementById('amount').value);
+
+            if (!description || amount <= 0) {
+                return;
+            }
+
+            if (editingId !== null) {
+                // Editando transação existente
+                const index = transactions.findIndex(t => t.id === editingId);
+                if (index !== -1) {
+                    transactions[index] = {
+                        ...transactions[index],
+                        description: description,
+                        amount: amount
+                    };
+                }
+            } else {
+                // Criando nova transação
+                const transaction = {
+                    id: Date.now(),
+                    type: currentType,
+                    description: description,
+                    amount: amount,
+                    date: new Date().toISOString()
+                };
+                transactions.push(transaction);
+            }
+
+            localStorage.setItem('transactions', JSON.stringify(transactions)); // eslint-disable-line no-restricted-globals
+
+            renderTransactions();
+            updateBalance();
+            closeModal();
+        });
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+            if (days === 0) {
+                return 'Hoje ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            } else if (days === 1) {
+                return 'Ontem ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            } else if (days < 7) {
+                return days + ' dias atrás';
+            } else {
+                return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+        }
+        function renderTransactions() {
+            const container = document.getElementById('transactions-list');
+
+            if (transactions.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-400 py-8">
+                        <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        <p class="text-sm">Nenhuma transação registrada</p>
+                        <p class="text-xs mt-1">Adicione uma entrada ou saída</p>
+                    </div>
+                `;
+                return;
+            }
+            const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            container.innerHTML = sortedTransactions.map(t => `
+                <div class="flex ${t.type === 'entrada' ? 'justify-end' : 'justify-start'}">
+                    <div class="transaction-${t.type} max-w-[85%] sm:max-w-[70%] p-4 shadow-lg relative">
+                        <div class="flex items-start justify-between gap-3 mb-2">
+                            <p class="font-semibold text-white text-base flex-1">${t.description}</p>
+                            <div class="flex gap-1 flex-shrink-0">
+                                <button onclick="editTransaction(${t.id})" class="bg-white/20 hover:bg-white/30 rounded-full w-7 h-7 flex items-center justify-center transition">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="showDeleteConfirm(${t.id})" class="bg-white/20 hover:bg-white/30 rounded-full w-7 h-7 flex items-center justify-center transition">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-white mb-2">${formatCurrency(t.amount)}</p>
+                        <p class="text-xs text-white/70">${formatDate(t.date)}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+        function updateBalance() {
+            const totalEntrada = transactions
+                .filter(t => t.type === 'entrada')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const totalSaida = transactions
+                .filter(t => t.type === 'saida')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const balance = totalEntrada - totalSaida;
+            document.getElementById('balance').textContent = formatCurrency(balance);
+            document.getElementById('total-entrada').textContent = formatCurrency(totalEntrada);
+            document.getElementById('total-saida').textContent = formatCurrency(totalSaida);
+
+            const thisMonth = new Date().getMonth();
+            const thisYear = new Date().getFullYear();
+            const monthTransactions = transactions.filter(t => {
+                const date = new Date(t.date);
+                return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
+            });
+            document.getElementById('month-summary').textContent = `${monthTransactions.length} ${monthTransactions.length === 1 ? 'transação' : 'transações'}`;
+        }
+        // Initialize
+        renderTransactions();
+        updateBalance();
+        updateThemeIcon();
+    </script>
+</body>
+
+</html>
